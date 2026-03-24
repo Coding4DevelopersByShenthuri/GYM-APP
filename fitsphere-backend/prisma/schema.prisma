@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  passwordHash   String
+  name           String
+  age            Int?
+  weight         Float?
+  goal           String?   // WEIGHT_LOSS, MUSCLE_GAIN, ENDURANCE
+  experienceLevel String?  // BEGINNER, INTERMEDIATE, ADVANCED
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  workouts       Workout[]
+  bookings       Booking[]
+  progressRecords ProgressRecord[]
+}
+
+model Workout {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  isPublic    Boolean  @default(false)
+  exercises   Exercise[]
+  createdAt   DateTime @default(now())
+}
+
+model Exercise {
+  id          String   @id @default(uuid())
+  workoutId   String
+  workout     Workout  @relation(fields: [workoutId], references: [id])
+  name        String
+  sets        Int
+  reps        Int
+  weight      Float?
+  duration    Int?     // in seconds
+}
+
+model Schedule {
+  id          String    @id @default(uuid())
+  startTime   DateTime
+  endTime     DateTime
+  capacity    Int
+  bookings    Booking[]
+}
+
+model Booking {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  scheduleId  String
+  schedule    Schedule  @relation(fields: [scheduleId], references: [id])
+  status      String    @default("CONFIRMED") // CONFIRMED, CANCELLED
+  createdAt   DateTime  @default(now())
+}
+
+model ProgressRecord {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  date        DateTime  @default(now())
+  weight      Float?
+  caloriesBurned Int?
+  notes       String?
+}
