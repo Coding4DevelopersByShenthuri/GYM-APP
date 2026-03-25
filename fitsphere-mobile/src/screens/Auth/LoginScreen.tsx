@@ -1,33 +1,77 @@
-import React from 'react';
-import { View, Text, StyleSheet, TextInput } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { GlassCard } from '../../components/GlassCard';
 import { GlowButton } from '../../components/GlowButton';
 import { Colors } from '../../theme';
+import { login } from '../../services/authService';
 
-  export default function LoginScreen() {
-    return (
-      <View style={styles.container}>
-        <GlassCard style={styles.glassCard}>
-          <Text style={styles.title}>FitSphere AI</Text>
-          <Text style={styles.subtitle}>Welcome to the Future of Fitness</Text>
-          
-          <TextInput 
-            style={styles.input} 
-            placeholder="Email Address" 
-            placeholderTextColor={Colors.textSecondary}
-          />
-          <TextInput 
-            style={styles.input} 
-            placeholder="Password" 
-            secureTextEntry 
-            placeholderTextColor={Colors.textSecondary}
-          />
+interface LoginScreenProps {
+  onSignup: () => void;
+  onLoginSuccess: (user: any) => void;
+}
 
-          <GlowButton title="Login" style={styles.button} />
-        </GlassCard>
-      </View>
-    );
-  }
+export default function LoginScreen({ onSignup, onLoginSuccess }: LoginScreenProps) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const data = await login(email, password);
+      onLoginSuccess(data.user);
+    } catch (error: any) {
+      const message = error.response?.data?.error || 'Login failed';
+      Alert.alert('Login Failed', message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <GlassCard style={styles.glassCard}>
+        <Text style={styles.title}>FitSphere AI</Text>
+        <Text style={styles.subtitle}>Welcome to the Future of Fitness</Text>
+        
+        <TextInput 
+          style={styles.input} 
+          placeholder="Email Address" 
+          placeholderTextColor={Colors.textSecondary}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+        <TextInput 
+          style={styles.input} 
+          placeholder="Password" 
+          secureTextEntry 
+          placeholderTextColor={Colors.textSecondary}
+          value={password}
+          onChangeText={setPassword}
+        />
+
+        {loading ? (
+          <ActivityIndicator size="large" color={Colors.accentPrimary} style={{ marginVertical: 20 }} />
+        ) : (
+          <GlowButton title="Login" style={styles.button} onPress={handleLogin} />
+        )}
+
+        <TouchableOpacity onPress={onSignup} style={styles.signupLink}>
+          <Text style={styles.signupText}>
+            Don't have an account? <Text style={styles.signupAccent}>Sign Up</Text>
+          </Text>
+        </TouchableOpacity>
+      </GlassCard>
+    </View>
+  );
+}
 
   const styles = StyleSheet.create({
     container: {
@@ -71,6 +115,18 @@ import { Colors } from '../../theme';
     buttonText: {
       color: Colors.black,
       fontSize: 18,
+      fontWeight: 'bold',
+    },
+    signupLink: {
+      marginTop: 20,
+      alignItems: 'center',
+    },
+    signupText: {
+      color: Colors.textSecondary,
+      fontSize: 14,
+    },
+    signupAccent: {
+      color: Colors.accentPrimary,
       fontWeight: 'bold',
     },
   });

@@ -19,6 +19,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/workouts', workoutRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/schedules', scheduleRoutes);
+app.use('/api/schedule', scheduleRoutes); // Alias to fix mobile client 404
 
 app.get('/health', (req, res) => {
   res.json({ status: 'FitSphere AI Backend is running', timestamp: new Date() });
