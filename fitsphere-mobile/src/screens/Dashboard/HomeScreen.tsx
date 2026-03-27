@@ -15,6 +15,10 @@ import { GlassCard } from '../../components/GlassCard';
 import { Colors, Typography, Spacing } from '../../theme';
 import apiClient, { getStoredUser } from '../../services/authService';
 import { Flame, TrendingUp, Target, ArrowRight, Moon, Sun, Sunset } from 'lucide-react-native';
+import { io } from 'socket.io-client';
+import { Platform } from 'react-native';
+
+const SOCKET_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5000' : 'http://192.168.1.6:5000';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const CARD_W = (SCREEN_W - Spacing.md * 2 - Spacing.sm) / 2;
@@ -46,7 +50,16 @@ export default function HomeScreen() {
     Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
     const iv = setInterval(() => setInsightIdx((i) => (i + 1) % AI_INSIGHTS.length), 5000);
     fetchData();
-    return () => clearInterval(iv);
+
+    const socket = io(SOCKET_URL);
+    socket.on('stats_update', (newStats) => {
+      setStats((prev) => ({ ...prev, ...newStats }));
+    });
+
+    return () => {
+      clearInterval(iv);
+      socket.disconnect();
+    };
   }, []);
 
   const fetchData = async () => {

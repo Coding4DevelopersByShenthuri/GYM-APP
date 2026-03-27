@@ -7,7 +7,7 @@ import { GlassCard } from '../../components/GlassCard';
 import { GlowButton } from '../../components/GlowButton';
 import { Colors, Typography, Spacing, Shadows } from '../../theme';
 import apiClient from '../../services/authService';
-import { Dumbbell, Plus, ChevronRight, X, Check } from 'lucide-react-native';
+import { Dumbbell, Plus, ChevronRight, X, Sparkles } from 'lucide-react-native';
 
 interface Exercise {
   name: string;
@@ -95,6 +95,29 @@ export default function WorkoutScreen() {
     }
   };
 
+  const handleAIGenerate = async () => {
+    setSaving(true);
+    try {
+      const resp = await apiClient.post('/ai/generate-workout', {
+        goal: 'GENERAL_FITNESS',
+        experienceLevel: 'INTERMEDIATE',
+        durationMinutes: 45
+      });
+      if (resp.data.plan) {
+        setWorkoutTitle(resp.data.plan.title);
+        setWorkoutDesc(resp.data.plan.description);
+        setExercises(resp.data.plan.exercises.map((e: any) => ({
+          name: e.name, sets: e.sets.toString(), reps: e.reps.toString(), weight: e.weight?.toString() || ''
+        })));
+        setShowCreateModal(true);
+      }
+    } catch (e) {
+      Alert.alert('AI Error', 'Could not generate workout. Are you sure the backend has the AI endpoint implemented?');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <Animated.View style={[styles.wrapper, { opacity: fadeAnim }]}>
       <ScrollView
@@ -108,9 +131,14 @@ export default function WorkoutScreen() {
             <Text style={styles.title}>Workout Protocols</Text>
             <Text style={styles.subtitle}>{workouts.length} protocols in your arsenal</Text>
           </View>
-          <TouchableOpacity style={styles.addFab} onPress={() => setShowCreateModal(true)}>
-            <Plus size={22} color={Colors.black} />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <TouchableOpacity style={[styles.addFab, { backgroundColor: Colors.accentGold }]} onPress={handleAIGenerate} disabled={saving}>
+              <Sparkles size={22} color={Colors.black} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.addFab} onPress={() => setShowCreateModal(true)}>
+              <Plus size={22} color={Colors.black} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Workout List */}
